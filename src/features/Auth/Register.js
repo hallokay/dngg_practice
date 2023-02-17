@@ -1,4 +1,3 @@
-import React from 'react'
 import { useRef, useState, useEffect } from 'react'
 import {
   faCheck,
@@ -7,30 +6,33 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { Link } from 'react-router-dom'
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-// import axios from "./api/axios";
+import axios from "../../api/axios";
+
 
 // 회원가입 정규식
 const USER_REGEX = /^[A-z][A-z0-9-_]{3,23}$/;
-const PWD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%]).{8,24}$/;
+const PWD_REGEX = /^(?=.*[a-zA-Z])(?=.*[!@#$%^*+=-])(?=.*[0-9]).{6,18}$/;
+const REGISTER_URL = '/register'
 
 const Register = () => {
-    const userRef = useRef();
-    const errRef = useRef();
+  const userRef = useRef();
+  const errRef = useRef();
 
-    const [user, setUser] = useState('');
-    const [validName, setValidName] = useState(false);
-    const [userFocus, setUserFocus] = useState(false);
-    
-    const [pwd, setPwd] = useState('');
-    const [validPwd, setValidPwd] = useState(false);
-    const [pwdFocus, setPwdFocus] = useState(false);
+  const [user, setUser] = useState("");
+  const [validName, setValidName] = useState(false);
+  const [userFocus, setUserFocus] = useState(false);
 
-    const [matchPwd, setMatchPwd] = useState('');
-    const [validMatch, setValidMatch] = useState(false);
-    const [matchFocus, setMatchFocus] = useState(false);
+  const [pwd, setPwd] = useState("");
+  const [validPwd, setValidPwd] = useState(false);
+  const [pwdFocus, setPwdFocus] = useState(false);
 
-    const [errMsg, setErrMsg] = useState('');
-    const [success, setSuccess] = useState(false);
+  const [matchPwd, setMatchPwd] = useState("");
+  const [validMatch, setValidMatch] = useState(false);
+  const [matchFocus, setMatchFocus] = useState(false);
+
+  const [errMsg, setErrMsg] = useState("");
+  const [success, setSuccess] = useState(false);
+
 
 // 처음 로딩됐을 때 받아지는 부분
     useEffect(() => {
@@ -41,6 +43,7 @@ const Register = () => {
         const result = USER_REGEX.test(user);
         setValidName(result);
     },[user]);
+
     // 비번
     useEffect(() => {
         const result = PWD_REGEX.test(pwd);
@@ -48,6 +51,7 @@ const Register = () => {
         const match = pwd === matchPwd;
         setValidMatch(match);
     }, [pwd, matchPwd]);
+
     // 에러메세지
       useEffect(() => {
         setErrMsg('');
@@ -61,7 +65,26 @@ const Register = () => {
           setErrMsg('Invalid Entry');
           return;
         }
-        setSuccess(true);
+
+        try{
+          const response = await axios.post(REGISTER_URL,
+            JSON.stringify({ user, pwd }),
+            {
+              headers: { 'Content-Type' : 'application/json'},
+              withCredentials: true
+            });
+            console.log(response.data);
+            console.log(response.accessTocken);
+            console.log(JSON.stringify(response));
+            setSuccess(true);
+        } catch (err) {
+          if(!err?.response) {
+            setErrMsg('No Server Response')
+          } else {
+            setErrMsg('등록 실패')
+          }
+          errRef.current.focus();
+        }
 
       }
   return (
@@ -193,7 +216,7 @@ const Register = () => {
           <p>
             이미 가입이 되어있으시다면?
             <span className="line">
-              <Link to="/">Sign in</Link>
+              <Link to="/login">Sign in</Link>
             </span>
           </p>
         </section>
